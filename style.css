@@ -21,10 +21,15 @@ body {
 	width:333px;
 	margin: 0px 0px 15px 15px;
 }
-.box_info {
+.box_info, .eol {
 	border:1px dashed black;
 	padding:0px 15px 0px 15px;
 	margin:15px 0px 0px 0px;
+}
+.eol {
+	border-color:#f00;
+	border-width:3px;
+	text-align:center;
 }
 #box_popup a.popup { text-decoration:none; }
 #box_popup a:hover { text-decoration:none; color:black; }
