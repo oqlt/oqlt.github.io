@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Keeping oqlt.de online.
+
+Resources:
+
+  # A CloudFormation distribution that provides https://oqlt.github.io/ at https://oqlt.de/
+  CFDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases: [ oqlt.de ]
+        HttpVersion: http2
+        PriceClass: PriceClass_100 # el cheapo
+        Origins:
+        - Id: GitHub
+          DomainName: oqlt.github.io
+          CustomOriginConfig:
+            OriginProtocolPolicy: https-only
+            OriginSSLProtocols: [ SSLv3, TLSv1, TLSv1.1, TLSv1.2 ]
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: GitHub
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          # A certificate I registered for oqlt.de and *.oqlt.de
+          AcmCertificateArn: arn:aws:acm:us-east-1:859949227357:certificate/8d39dfde-a87e-4a6e-85c0-f7b108e6b1e1
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1
+
+  # This bucket redirects www.oqlt.de to oqlt.de (without www.)
+  RedirectBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: www.oqlt.de
+      AccessControl: BucketOwnerFullControl
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: oqlt.de
+      Tags:
+      - Key: Project
+        Value: oqlt
+
+  # DNS zone
+  Zone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: oqlt.de.
+      HostedZoneTags:
+      - Key: Project
+        Value: oqlt
+
+  # DNS records
+  Records:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      Comment: oqlt Website
+      HostedZoneId: !Ref Zone
+      RecordSets:
+      # alias oqlt.de to CloudFront
+      - Name: oqlt.de.
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2 # global ID for CloudFormation
+          DNSName: !GetAtt CFDistribution.DomainName
+      # set our Uberspace server as the MX
+      # TODO: move to AWS
+      - Name: oqlt.de.
+        Type: MX
+        ResourceRecords:
+        - 10 scorpius.uberspace.de.
+        # - 10 inbound-smtp.eu-west-1.amazonaws.com.
+        TTL: 3600
+      # point www.oqlt.de to the redirect bucket
+      - Name: www.oqlt.de.
+        Type: CNAME
+        ResourceRecords:
+        - !Sub www.oqlt.de.s3-website-${AWS::Region}.amazonaws.com
+        TTL: 3600
