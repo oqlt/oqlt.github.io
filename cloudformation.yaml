@@ -71,12 +71,20 @@ Resources:
       - Name: oqlt.de.
         Type: MX
         ResourceRecords:
-        - 10 scorpius.uberspace.de.
-        # - 10 inbound-smtp.eu-west-1.amazonaws.com.
+        - 10 mxa.mailgun.org
+        - 10 mxb.mailgun.org
         TTL: 3600
       # point www.oqlt.de to the redirect bucket
       - Name: www.oqlt.de.
         Type: CNAME
         ResourceRecords:
         - !Sub www.oqlt.de.s3-website-${AWS::Region}.amazonaws.com
+        TTL: 3600
+      - Name: oqlt.de.
+        Type: TXT
+        ResourceRecords: [ '"v=spf1 include:mailgun.org ~all"' ]
+        TTL: 3600
+      - Name: pic._domainkey.oqlt.de.
+        Type: TXT
+        ResourceRecords: [ '"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDhcjBxXVH8AvZJAEYneTFKZiL5Y/CMZGwNqLe07yPYScUoBdYPPME44GGxta5xCvecOw70dGjef2CwcGmFLk6L6Mo+gSqRPix3TWob1B6R1YUfBGcTfOvpkxzHiAGBDN0PwC9LwPQvAy0fFpFoDHEmf9Yx7NqAsLw+wyc9Ke5HQwIDAQAB"' ]
         TTL: 3600
